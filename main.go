@@ -15,7 +15,12 @@ import (
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/screenshot", ScreenshotHandler).Methods("GET")
-	r.Handle("/", &Server{r})
+
+	fs := http.FileServer(http.Dir("./static/"))
+	r.Handle("/", &Server{r}).Handler(fs)
+	r.PathPrefix("/css").Handler(fs)
+	r.PathPrefix("/js").Handler(fs)
+	r.PathPrefix("/images").Handler(fs)
 
 	log.Println("Server started at :80.")
 	log.Fatal(http.ListenAndServe(":80", r))
@@ -54,7 +59,7 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	opts.scrollSelector = v.Get("sel")
+	opts.scrollSelector = v.Get("selector")
 	if scrollY := v.Get("y"); scrollY != "" {
 		if i, err := strconv.ParseInt(scrollY, 10, 64); err == nil {
 			opts.scrollY = i
