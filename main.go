@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,6 +24,10 @@ func main() {
 	r.PathPrefix("/css").Handler(fs)
 	r.PathPrefix("/js").Handler(fs)
 	r.PathPrefix("/images").Handler(fs)
+
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+	})
 
 	log.Println("Server started at :80.")
 	log.Fatal(http.ListenAndServe(":80", r))
@@ -36,6 +43,7 @@ type ScreenshotOption struct {
 	scrollSelector string
 	height         int64
 	width          int64
+	hide           []string
 }
 
 type ImageBuffer = []byte
@@ -57,6 +65,10 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte("Bad Request: URL not found"))
 		return
+	}
+
+	if hide := v.Get("hide"); hide != "" {
+		opts.hide = strings.Split(hide, "\r\n")
 	}
 
 	opts.scrollSelector = v.Get("selector")
@@ -116,6 +128,21 @@ func ScreenshotTasks(opts ScreenshotOption, buffer *ImageBuffer) chromedp.Tasks 
 		}),
 	}
 
+	if len(opts.hide) != 0 {
+		actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) error {
+			_, exp, err := runtime.Evaluate(BuildInvisibleScript(opts.hide)).Do(ctx)
+			if err != nil {
+				return err
+			}
+
+			if exp != nil {
+				return exp
+			}
+
+			return nil
+		}))
+	}
+
 	if opts.scrollSelector != "" {
 		actions = append(actions, chromedp.ScrollIntoView(opts.scrollSelector))
 	}
@@ -130,4 +157,13 @@ func ScreenshotTasks(opts ScreenshotOption, buffer *ImageBuffer) chromedp.Tasks 
 	}))
 
 	return actions
+}
+
+func BuildInvisibleScript(hide []string) string {
+	return fmt.Sprintf(`[%s].forEach(item => {
+		document.querySelector(item).remove()
+	})`, fmt.Sprintf(
+		"'%s'",
+		strings.Join(hide, `', '`)),
+	)
 }
