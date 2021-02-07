@@ -4,28 +4,34 @@ const templates = {
         y: null,
         selector: null,
         height: null,
-        width: null
+        width: null,
+        hide: null
     },
     github: {
         url: 'https://github.com',
-        y: 0,
+        y: null,
         selector: null,
         width: 1440,
-        height: 900
+        height: 900,
+        hide: [
+            'body > div:first-child'
+        ]
     }
 }
 
-const elements = ['url', 'width', 'height', 'y', 'selector', 'template']
+const elements = ['url', 'width', 'height', 'y', 'selector', 'hide', 'template']
 
 const [
-    url, width, height,
-    y, selector, select
+    url, width, height, y,
+    selector, hide, select
 ] = elements.map(element => document.getElementById(element))
 
 select.onchange = () => {
     const template = templates[select.value] || templates['no-template']
 
-    for([key, value] of Object.entries(template)){
+    for(let [key, value] of Object.entries(template)){
+        if(Array.isArray(value)) value = value.join('\n')
+
         window[key].value = value;
     }
 }
