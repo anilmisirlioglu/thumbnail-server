@@ -72,7 +72,7 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts.scrollSelector = v.Get("selector")
-	if scrollY := v.Get("y"); scrollY != "" {
+	if scrollY := v.Get("scrollY"); scrollY != "" {
 		if i, err := strconv.ParseInt(scrollY, 10, 64); err == nil {
 			opts.scrollY = i
 		}
@@ -99,7 +99,6 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(buffer)
 }
@@ -123,14 +122,20 @@ func ScreenshotTasks(opts ScreenshotOption, buffer *ImageBuffer) chromedp.Tasks 
 	actions := chromedp.Tasks{
 		chromedp.Navigate(opts.url),
 		chromedp.WaitVisible("html", chromedp.ByQuery),
-		chromedp.EmulateViewport(opts.width, opts.height, func(params *emulation.SetDeviceMetricsOverrideParams, _ *emulation.SetTouchEmulationEnabledParams) {
-			params.WithPositionY(opts.scrollY)
-		}),
 	}
 
+	var scripts []string
 	if len(opts.hide) != 0 {
+		scripts = append(scripts, BuildInvisibleScript(opts.hide))
+	}
+
+	if opts.scrollY != 0 {
+		scripts = append(scripts, BuildWindowScrollScript(opts.scrollY))
+	}
+
+	for _, script := range scripts {
 		actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) error {
-			_, exp, err := runtime.Evaluate(BuildInvisibleScript(opts.hide)).Do(ctx)
+			_, exp, err := runtime.Evaluate(script).Do(ctx)
 			if err != nil {
 				return err
 			}
@@ -148,9 +153,32 @@ func ScreenshotTasks(opts ScreenshotOption, buffer *ImageBuffer) chromedp.Tasks 
 	}
 
 	actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) (err error) {
+		_, _, size, err := page.GetLayoutMetrics().Do(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = emulation.
+			SetDeviceMetricsOverride(opts.width, opts.height, 1, false).
+			WithScreenOrientation(&emulation.ScreenOrientation{
+				Type:  emulation.OrientationTypePortraitPrimary,
+				Angle: 0,
+			}).
+			Do(ctx)
+		if err != nil {
+			return err
+		}
+
 		*buffer, err = page.
 			CaptureScreenshot().
 			WithQuality(100).
+			WithClip(&page.Viewport{
+				X:      size.X,
+				Y:      size.Y + float64(opts.scrollY),
+				Width:  float64(opts.width),
+				Height: float64(opts.height),
+				Scale:  1,
+			}).
 			Do(ctx)
 
 		return err
@@ -166,4 +194,8 @@ func BuildInvisibleScript(hide []string) string {
 		"'%s'",
 		strings.Join(hide, `', '`)),
 	)
+}
+
+func BuildWindowScrollScript(scrollY int64) string {
+	return fmt.Sprintf(`window.scrollTo(0, %d)`, scrollY)
 }

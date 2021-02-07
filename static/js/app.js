@@ -8,10 +8,10 @@ const templates = {
     },
     github: {
         url: 'https://github.com',
-        y: 100,
+        y: 0,
         selector: null,
-        width: 1080,
-        height: 720
+        width: 1440,
+        height: 900
     }
 }
 
