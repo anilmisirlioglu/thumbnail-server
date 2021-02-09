@@ -1,1 +1,1 @@
-web: -port 5000
+web: bin/thumbnail-server
