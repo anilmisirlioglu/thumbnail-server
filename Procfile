@@ -1,1 +1,1 @@
-web: tn-server -port 5000
+web: -port 5000
