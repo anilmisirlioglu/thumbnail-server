@@ -1,1 +1,1 @@
-web: PORT=8000 go run .
+web: tn-server -port 5000
