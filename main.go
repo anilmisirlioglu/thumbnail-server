@@ -1,18 +1,12 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/chromedp/cdproto/emulation"
-	"github.com/chromedp/cdproto/page"
-	"github.com/chromedp/cdproto/runtime"
-	"github.com/chromedp/chromedp"
 	"github.com/gorilla/mux"
+	"image/color"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -38,15 +32,31 @@ type Server struct {
 }
 
 type ScreenshotOption struct {
-	url            string
-	scrollY        int64
-	scrollSelector string
-	height         int64
-	width          int64
-	hide           []string
+	url        string
+	width      int64
+	height     int64
+	scrollY    int64
+	selector   string
+	quality    int64
+	hide       []string
+	background BackgroundOption
+}
+
+type BackgroundOption struct {
+	color  color.RGBA
+	width  int
+	height int
 }
 
 type ImageBuffer = []byte
+
+const (
+	defaultWidth     int64 = 1920
+	defaultHeight    int64 = 1080
+	defaultQuality   int64 = 100
+	defaultMinWidth  int64 = 1820
+	defaultMinHeight int64 = 980
+)
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if origin := r.Header.Get("origin"); origin != "" {
@@ -67,11 +77,18 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	quality := v.Get("quality")
+	if opts.quality = defaultQuality; quality != "" {
+		if i, err := strconv.ParseInt(quality, 10, 64); err == nil {
+			opts.quality = i
+		}
+	}
+
 	if hide := v.Get("hide"); hide != "" {
 		opts.hide = strings.Split(hide, "\r\n")
 	}
 
-	opts.scrollSelector = v.Get("selector")
+	opts.selector = v.Get("selector")
 	if scrollY := v.Get("scrollY"); scrollY != "" {
 		if i, err := strconv.ParseInt(scrollY, 10, 64); err == nil {
 			opts.scrollY = i
@@ -79,16 +96,27 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	width := v.Get("width")
-	if opts.width = 1080; width != "" {
+	if opts.width = defaultWidth; width != "" {
 		if i, err := strconv.ParseInt(width, 10, 64); err == nil {
 			opts.width = i
 		}
 	}
 
 	height := v.Get("height")
-	if opts.height = 720; height != "" {
+	if opts.height = defaultHeight; height != "" {
 		if i, err := strconv.ParseInt(height, 10, 64); err == nil {
 			opts.height = i
+		}
+	}
+
+	if bgColor := v.Get("bgColor"); bgColor != "" {
+		c, err := ParseHexColor(bgColor)
+		if err == nil && !IsNoBackgroundColor(c) {
+			opts.width = defaultMinWidth
+			opts.height = defaultMinHeight
+			opts.background.color = c
+			opts.background.width = int(defaultWidth)
+			opts.background.height = int(defaultHeight)
 		}
 	}
 
@@ -99,103 +127,7 @@ func ScreenshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Length", strconv.Itoa(len(buffer)))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(buffer)
-}
-
-func TakeScreenshot(opts ScreenshotOption) (ImageBuffer, error) {
-	ctx, cancel := chromedp.NewContext(context.Background())
-	defer cancel()
-
-	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	var buffer ImageBuffer
-	if err := chromedp.Run(ctx, ScreenshotTasks(opts, &buffer)); err != nil {
-		return nil, err
-	}
-
-	return buffer, nil
-}
-
-func ScreenshotTasks(opts ScreenshotOption, buffer *ImageBuffer) chromedp.Tasks {
-	actions := chromedp.Tasks{
-		chromedp.Navigate(opts.url),
-		chromedp.WaitVisible("html", chromedp.ByQuery),
-	}
-
-	var scripts []string
-	if len(opts.hide) != 0 {
-		scripts = append(scripts, BuildInvisibleScript(opts.hide))
-	}
-
-	if opts.scrollY != 0 {
-		scripts = append(scripts, BuildWindowScrollScript(opts.scrollY))
-	}
-
-	for _, script := range scripts {
-		actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) error {
-			_, exp, err := runtime.Evaluate(script).Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			if exp != nil {
-				return exp
-			}
-
-			return nil
-		}))
-	}
-
-	if opts.scrollSelector != "" {
-		actions = append(actions, chromedp.ScrollIntoView(opts.scrollSelector))
-	}
-
-	actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) (err error) {
-		_, _, size, err := page.GetLayoutMetrics().Do(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = emulation.
-			SetDeviceMetricsOverride(opts.width, opts.height, 1, false).
-			WithScreenOrientation(&emulation.ScreenOrientation{
-				Type:  emulation.OrientationTypePortraitPrimary,
-				Angle: 0,
-			}).
-			Do(ctx)
-		if err != nil {
-			return err
-		}
-
-		*buffer, err = page.
-			CaptureScreenshot().
-			WithQuality(100).
-			WithClip(&page.Viewport{
-				X:      size.X,
-				Y:      size.Y + float64(opts.scrollY),
-				Width:  float64(opts.width),
-				Height: float64(opts.height),
-				Scale:  1,
-			}).
-			Do(ctx)
-
-		return err
-	}))
-
-	return actions
-}
-
-func BuildInvisibleScript(hide []string) string {
-	return fmt.Sprintf(`[%s].forEach(item => {
-		document.querySelector(item).remove()
-	})`, fmt.Sprintf(
-		"'%s'",
-		strings.Join(hide, `', '`)),
-	)
-}
-
-func BuildWindowScrollScript(scrollY int64) string {
-	return fmt.Sprintf(`window.scrollTo(0, %d)`, scrollY)
 }

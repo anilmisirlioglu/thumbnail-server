@@ -2,6 +2,10 @@ body {
     background-color: #25274d;
 }
 
+.form-control {
+    height: 2.375rem;
+}
+
 .box {
     padding: 4%;
     height: 400px;
@@ -46,4 +50,8 @@ body {
 
 .box-form button:focus {
     box-shadow: none;
+}
+
+.box-form textarea {
+    height: 25%;
 }
