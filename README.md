@@ -5,6 +5,10 @@
 Website Thumbnail & Screenshot Generator written in **Go** with
 using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
 
+<p align="center">
+  <img src="https://cdn.discordapp.com/attachments/771673727473156109/808857787874279454/unknown.png" width="738">
+</p>
+
 ## Features
 
 - Generating the Website Screenshots & Thumbnails.
@@ -19,7 +23,9 @@ using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
 - [ ] Fullscreen page screenshot.
 - [ ] Allowing custom height and width adjustments for images with backgrounds.
 
-## `/screenshot` Endpoint
+## Query Parameters
+
+> for `/screenshot` Endpoint
 
 | Parameter |  Type  | Default | Description |
 | --------- | ------ | ------- | ----------- |
@@ -45,8 +51,3 @@ using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
     ``` 
 
 3. Finally, enter localhost address from your browser.
-
-## Preview
-<p align="center">
-  <img src="https://cdn.discordapp.com/attachments/771673727473156109/808857787874279454/unknown.png" width="738">
-</p>
