@@ -4,23 +4,20 @@
 
 Website Thumbnail & Screenshot Generator written in **Go** with
 using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
----
 
 ## Features
+
 - Generating the Website Screenshots & Thumbnails.
 - Set the custom width, height and quality values of the screenshot.
 - Ability to scroll the page on the Y axis.
 - Set the background and customize the background color of the screenshot.
 - Delete the elements you do not want from the screenshot with the sensitive selector.
 
----
-
 ## TODO
+
 - [ ] Add the Chrome UI to images with backgrounds.
 - [ ] Fullscreen page screenshot.
 - [ ] Allowing custom height and width adjustments for images with backgrounds.
-
----
 
 ## `/screenshot` Endpoint
 
@@ -34,8 +31,22 @@ using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
 | scrollY   | int    | -       | Is the pixel along the vertical axis (Y) |
 | hide      | string | -       | Selectors of elements to be hidden |
 
----
+
+## Installation & Test
+
+1. First, install repository
+    ```sh
+    git clone https://github.com/anilmisirlioglu/thumbnail-server && cd thumbnail-server
+    ```
+
+2. Then, run it.
+    ```sh
+    go run .
+    ``` 
+
+3. Finally, enter localhost address from your browser.
 
 ## Preview
-
-![image](https://cdn.discordapp.com/attachments/771673727473156109/808857787874279454/unknown.png)
+<p align="center">
+  <img src="https://cdn.discordapp.com/attachments/771673727473156109/808857787874279454/unknown.png" width="738">
+</p>
