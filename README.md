@@ -3,7 +3,6 @@
 Website Thumbnail & Screenshot Generator written in **Go** with
 using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp)
 
----
 
 ## `/screenshot` Endpoint
 
@@ -16,8 +15,6 @@ using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp)
 | bgColor   | string | #000000 | Background color if available (If value is #000000 (default) means the no background) | 
 | scrollY   | int    | -       | Is the pixel along the vertical axis (Y) |
 | hide      | string | -       | Selectors of elements to be hidden |
-
---- 
 
 ## Preview
 
