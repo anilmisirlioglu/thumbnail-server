@@ -2,8 +2,8 @@
 
 [![shields](https://img.shields.io/badge/made%20with-go-blue?logo=go&style=for-the-badge&logoColor=white)](https://golang.org)
 
-Website Thumbnail & Screenshot Generator written in **Go** with
-using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
+Website Thumbnail & Screenshot Generator written in **Go** with using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
+
 ---
 
 ## Features
