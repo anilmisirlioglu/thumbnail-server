@@ -1,7 +1,24 @@
 # Thumbnail Server
 
+[![shields](https://img.shields.io/badge/made%20with-go-blue?logo=go&style=for-the-badge&logoColor=white)](https://golang.org)
+
 Website Thumbnail & Screenshot Generator written in **Go** with
-using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp)
+using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
+---
+
+## Features
+- Generating the Website Screenshots & Thumbnails.
+- Set the custom width, height and quality values of the screenshot.
+- Ability to scroll the page on the Y axis.
+- Set the background and customize the background color of the screenshot.
+- Delete the elements you do not want from the screenshot with the sensitive selector.
+
+---
+
+## TODO
+- [ ] Add the Chrome UI to images with backgrounds.
+- [ ] Fullscreen page screenshot.
+- [ ] Allowing custom height and width adjustments for images with backgrounds.
 
 ---
 
