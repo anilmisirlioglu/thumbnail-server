@@ -5,12 +5,12 @@
 Website Thumbnail & Screenshot Generator written in **Go** with
 using [Chrome DevTools Protocol](https://github.com/chromedp/chromedp).
 
-> [Click to try a live demo.](https://tn.anil.tools)
-> NOTE: Fonts may appear bold due to heroku chrome buildpack.
-
 <p align="center">
   <img src="https://cdn.discordapp.com/attachments/771673727473156109/808857787874279454/unknown.png" width="738">
 </p>
+
+> [Click to try a live demo.](https://tn.anil.tools)
+> NOTE: Fonts may appear bold due to heroku chrome buildpack.
 
 ## Features
 
