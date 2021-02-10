@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/gorilla/mux"
 	"image/color"
 	"log"
@@ -23,8 +25,9 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 	})
 
-	log.Println("Server started at :80.")
-	log.Fatal(http.ListenAndServe(":80", r))
+	port := flag.Int("port", 80, "port")
+	flag.Parse()
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), r))
 }
 
 type Server struct {
